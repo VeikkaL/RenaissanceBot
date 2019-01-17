@@ -1,0 +1,85 @@
+# TODO
+# - Symbolilistat
+# - Nousijat/laskijat
+# - Aamuviestit
+# - Lähetys jos ei usernamea
+
+# Osaketietojen hakemiseen
+from yahoo_fin.stock_info import *
+
+# Telegram-botin käyttöön
+import telepot
+from telepot.loop import MessageLoop
+import schedule
+
+token = '739766302:AAGLi2GF4H53NXPf5ALgYmQjTsuJBJ0omkw'
+bot = telepot.Bot(token)
+
+# Lähettää indeksien avaustiedot joka aamu
+#schedule.every().any_day_of_the_week.at(MM:SS).do(your_routine)
+#schedule.every().any_day_of_the_week.at(MM:SS).do(your_routine)
+
+# Käsittelee botille tulevat viestit
+def handle(msg):
+    content_type, chat_type, chat_id = telepot.glance(msg)
+    text = msg.get('text').upper()
+    user = msg['from']['username']
+    
+    print(content_type, chat_type, chat_id, user, text)
+
+    try:
+        if content_type == 'text' and 'KURSSI' in text:
+            ticker = text[7:]
+            quote = round(get_live_price(ticker), 2)
+            table = get_quote_table(ticker)
+            close = round(table.get('Previous Close'), 2)
+            change = round((quote / close - 1) * 100, 2)
+            
+            if '.' in ticker:
+                if '.SS' in ticker:
+                    bot.sendMessage(chat_id, f'{ticker}: RMB {quote}, tänään {change}%')
+                elif '.HK' in ticker:
+                    bot.sendMessage(chat_id, f'{ticker}: HKD {quote}, tänään {change}%')
+                elif '.L' in ticker:
+                    bot.sendMessage(chat_id, f'{ticker}: £{quote}, tänään {change}%')
+                elif '.T' in ticker:
+                    bot.sendMessage(chat_id, f'{ticker}: ¥{quote}, tänään {change}%')
+                elif '.BO' in ticker:
+                    bot.sendMessage(chat_id, f'{ticker}: INR {quote}, tänään {change}%')
+                elif '.TO' in ticker:
+                    bot.sendMessage(chat_id, f'{ticker}: CAD {quote}, tänään {change}%')
+                elif '.KS' in ticker:
+                    bot.sendMessage(chat_id, f'{ticker}: ₩{quote}, tänään {change}%')
+                else:
+                    bot.sendMessage(chat_id, f'{ticker}: €{quote}, tänään {change}%')
+            elif '^' in ticker:
+                bot.sendMessage(chat_id, f'{ticker}: {quote}, tänään {change}%')
+            else:
+                bot.sendMessage(chat_id, f'{ticker}: ${quote}, tänään {change}%')
+
+        elif content_type == 'text' and 'INDEKSIT' in text:
+            tableS = get_quote_table('^GSPC')
+            tableH = get_quote_table('^OMXHPI')
+            quoteS = round(get_live_price('^GSPC'), 2)
+            quoteH = round(get_live_price('^OMXHPI'), 2)
+            closeS = round(tableS.get('Previous Close'), 2)
+            closeH = round(tableH.get('Previous Close'), 2)
+            changeS = round((quoteS / closeS - 1) * 100, 2)
+            changeH = round((quoteH / closeH - 1) * 100, 2)
+            bot.sendMessage(chat_id, f'S&P500: {quoteS}, tänään {changeS}%\nOMXHPI: {quoteH}, tänään {changeH}%')
+        
+#        elif content_type == 'text' and 'NOUSIJAT' in text:
+        
+#        elif content_type == 'text' and 'LASKIJAT' in text:
+        
+        elif content_type == 'text' and '/HELP' in text:
+            bot.sendMessage(chat_id, 'Komennot:\n\n"Kurssi [symboli]" - hae osakkeen tai indeksin reaaliaikainen kurssi sekä muutos eiliseen. Symbolit ovat mallia Yahoo Finance. Esimerkki: kurssi sampo.he\n\n"Indeksit" - Näytä S&P500 ja OMX Helsinki PI:n tämänhetkinen kurssi sekä muutos eiliseen.')
+        
+        else:
+            bot.sendMessage(chat_id, 'En ymmärrä :( Jos yritit hakea osakekurssia, varmista että symboli oli oikein. Myös kirjoittamalla /help saat apua!')
+            
+    except RuntimeError:
+        return
+MessageLoop(bot, handle).run_as_thread()
+
+

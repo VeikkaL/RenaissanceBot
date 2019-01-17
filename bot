@@ -66,7 +66,7 @@ def handle(msg):
             closeH = round(tableH.get('Previous Close'), 2)
             changeS = round((quoteS / closeS - 1) * 100, 2)
             changeH = round((quoteH / closeH - 1) * 100, 2)
-            bot.sendMessage(chat_id, f'S&P500: {quoteS}, tänään {changeS}%\nOMXHPI: {quoteH}, tänään {changeH}%'.format(quoteS=quoteS, changeS=changeS, quoteH=quoteH, changeH=changeH))
+            bot.sendMessage(chat_id, 'S&P500: {quoteS}, tänään {changeS}%\nOMXHPI: {quoteH}, tänään {changeH}%'.format(quoteS=quoteS, changeS=changeS, quoteH=quoteH, changeH=changeH))
         
 #        elif content_type == 'text' and 'NOUSIJAT' in text:
         
